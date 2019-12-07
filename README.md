@@ -10,7 +10,7 @@
 * gnu parallel (normalize.sh only)
 * ffmpeg (normalize.sh only)
 
-# usage
+## usage
 
 writes metadata to `./title` and `./artist` or `./title_scroll` and `./artist_scroll`
 
