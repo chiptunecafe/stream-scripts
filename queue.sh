@@ -54,7 +54,7 @@ jack_connect jam_mpv:out_1 system:playback_2
 jack_connect jam_mpv:out_0 "PulseAudio JACK Source:front-left"
 jack_connect jam_mpv:out_1 "PulseAudio JACK Source:front-right"
 
-# read metadata from mpd
+# read metadata from mpv
 title=$(echo '{ "command": ["get_property", "metadata/by-key/title"] }' | socat - ./mpv_ipc | jq -r .data)
 artist=$(echo '{ "command": ["get_property", "metadata/by-key/artist"] }' | socat - ./mpv_ipc | jq -r .data)
 
