@@ -1,29 +1,5 @@
 #!/bin/bash
 
-# config
-font="/home/max/.local/share/fonts/Eina01-SemiBold.ttf"
-font_size="100"
-title_width="550"
-artist_width="650"
-
-# fuck
-width_regex="width: (\S+);"
-rendered_title_width="0"
-rendered_artist_width="0"
-function metadata_widths() {
-    im_res=$(convert -debug annotate xc: -font $font -pointsize $font_size -annotate 0 "$1" null: 2>&1)
-    if [[ $im_res =~ $width_regex ]]
-    then
-        rendered_title_width=${BASH_REMATCH[1]}
-    fi
-
-    im_res=$(convert -debug annotate xc: -font $font -pointsize $font_size -annotate 0 "$2" null: 2>&1)
-    if [[ $im_res =~ $width_regex ]]
-    then
-        rendered_artist_width=${BASH_REMATCH[1]}
-    fi
-}
-
 # kill lingering mpv instance
 kill $(cat ./mpv_pid)
 
@@ -59,23 +35,41 @@ title=$(echo '{ "command": ["get_property", "metadata/by-key/title"] }' | socat 
 artist=$(echo '{ "command": ["get_property", "metadata/by-key/artist"] }' | socat - ./mpv_ipc | jq -r .data)
 
 # compute width of metadata text
-metadata_widths "$title" "$artist"
+rendered_title_width=$(./calculate_width.sh "$title")
+rendered_artist_width=$(./calculate_width.sh "$artist")
+space_width=$font_size # FIXME hardcoded for monospace
 
 # write metadata to appropriate files
 if (( $(echo "$rendered_title_width > $title_width" | bc -l) ))
 then
-    echo $title"  -  " > ./title_scroll
+    echo $title" - " > ./title_scroll
     echo "" > ./title
 else
-    echo $title > ./title
+    if [ "$center" == "1" ]
+    then
+        whitespace=$(expr $title_width - $rendered_title_width | tr -d '\n')
+        spaces=$(expr $whitespace / 2 / $space_width | tr -d '\n')
+        echo "$(head -c $spaces < /dev/zero | tr '\0' ' ')" $title > ./title
+    else
+        echo $title > ./title
+    fi
+
     echo "" > ./title_scroll
 fi
 
 if (( $(echo "$rendered_artist_width > $artist_width" | bc -l) ))
 then
-    echo $artist"  -  " > ./artist_scroll
+    echo $artist" - " > ./artist_scroll
     echo "" > ./artist
 else
-    echo $artist > ./artist
+    if [ "$center" == "1" ]
+    then
+        whitespace=$(expr $artist_width - $rendered_artist_width | tr -d '\n')
+        spaces=$(expr $whitespace / 2 / $space_width | tr -d '\n')
+        echo "$(head -c $spaces < /dev/zero | tr '\0' ' ')" $artist > ./artist
+    else
+        echo $artist > ./artist
+    fi
+
     echo "" > ./artist_scroll
 fi

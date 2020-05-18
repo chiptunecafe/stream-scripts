@@ -7,7 +7,7 @@ loudnorm="I=-16:TP=-1.5:LRA=11"
 ff_params="-ar 48k"
 ff_ext=".flac"
 
-outdir=$2
+outdir="$2"
 function normalize() {
     # run 1st ffmpeg pass
     ff_out=$(ffmpeg -i "$1" -af loudnorm=$loudnorm:print_format=json -f null - 2>&1 | tail -n 12)
@@ -30,4 +30,4 @@ function normalize() {
 # initialize env_parallel
 . `which env_parallel.bash`
 
-find $1 ! -path $1 | env_parallel normalize "{}"
+find "$1" ! -path "$1" | env_parallel normalize "{}"
